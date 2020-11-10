@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8" />
+    <title>电化学检测站</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+	<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+	<script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+	<style>
+		
+	</style>
+    <script>
+			diplaydata=[46, 62, 87, 57, 93, 5, 51, 24, 89, 16, 21, 9, 20, 60, 72, 68, 33, 27, 48, 63, 48, 62, 7, 0, 90, 41, 32, 44, 92, 49, 65, 22, 75, 56, 27, 57, 45, 54, 74, 38, 48, 50, 23, 67, 9, 0, 62, 61, 3, 60, 32, 22, 71, 73, 78, 32, 15, 76, 64, 89, 91, 61, 14, 23, 61, 3, 67, 100, 17, 82, 36, 21, 47, 45, 70, 84, 67, 74, 56, 17, 23, 87, 17, 70, 31, 5, 28, 26, 34, 15, 85, 93, 90, 34, 93, 83, 26, 23, 12, 8];
+			diplaydata1=[46, 62, 87, 57, 93, 5, 51, 24, 89, 16, 21, 9, 20, 60, 72, 68, 33, 27, 48, 63, 48, 62, 7, 0, 90, 41, 32, 44, 92, 49, 65, 22, 75, 56, 27, 57, 45, 54, 74, 38, 48, 50, 23, 67, 9, 0, 62, 61, 3, 60, 32, 22, 71, 73, 78, 32, 15, 76, 64, 89, 91, 61, 14, 23, 61, 3, 67, 100, 17, 82, 36, 21, 47, 45, 70, 84, 67, 74, 56, 17, 23, 87, 17, 70, 31, 5, 28, 26, 34, 15, 85, 93, 90, 34, 93, 83, 26, 23, 12, 8];
+			diplaydata2=[46, 62, 87, 57, 93, 5, 51, 24, 89, 16, 21, 9, 20, 60, 72, 68, 33, 27, 48, 63, 48, 62, 7, 0, 90, 41, 32, 44, 92, 49, 65, 22, 75, 56, 27, 57, 45, 54, 74, 38, 48, 50, 23, 67, 9, 0, 62, 61, 3, 60, 32, 22, 71, 73, 78, 32, 15, 76, 64, 89, 91, 61, 14, 23, 61, 3, 67, 100, 17, 82, 36, 21, 47, 45, 70, 84, 67, 74, 56, 17, 23, 87, 17, 70, 31, 5, 28, 26, 34, 15, 85, 93, 90, 34, 93, 83, 26, 23, 12, 8];
+			client = new Paho.MQTT.Client("47.94.234.52", Number(8083), "websockets-test");//建立客户端实例
+			client.connect({onSuccess:onConnect});//连接服务器并注册连接成功处理事件
+            function onConnect() {
+                console.log("onConnected");
+ 
+                topic = 'kical'; //订阅的主题
+ 
+                client.subscribe('kical');//订阅主题
+				client.subscribe('kical1');//订阅主题
+				client.subscribe('kical2');//订阅主题
+                console.log("subscribed");
+                //发送消息
+            }
+            client.onConnectionLost = onConnectionLost;//注册连接断开处理事件
+            client.onMessageArrived = onMessageArrived;//注册消息接收处理事件
+            function onConnectionLost(responseObject) {
+                if (responseObject.errorCode !== 0) {
+                    console.log("onConnectionLost:"+responseObject.errorMessage);
+                    console.log("连接已断开");
+                 }
+            }
+			function onMessageArrived(message) {
+			    console.log("收到消息:"+message.payloadString);
+			    console.log("主题："+message.destinationName);
+				switch(message.destinationName){
+					case 'kical':
+						diplaydata=[].concat(message.payloadString.split(',').map(Number),diplaydata.slice(0,100));break;
+					case 'kical1':
+						diplaydata1=[].concat(message.payloadString.split(',').map(Number),diplaydata1.slice(0,100));break;
+					case 'kical2':
+						diplaydata2=[].concat(message.payloadString.split(',').map(Number),diplaydata2.slice(0,100));break;
+					
+				}
+				$(function () {
+					$('#container').highcharts({
+						title:{
+							text:'电化学检测数据显示'
+						},
+						chart: {
+							zoomType: 'x'
+						},
+						xAxis: {
+							minRange: 100
+						},
+						series: [{
+							data: diplaydata,
+							showInLegend: false 
+						}],
+						plotOptions: {
+								series: {
+									lineWidth: 1,
+									connectNulls: true ,
+									animation: {
+										duration: 0,
+										easing: 'easeOutBounce'
+									}
+								}
+							},
+						credits:{
+							enabled: false
+						}
+					});
+				});
+				
+				
+				$(function () {
+					$('#container2').highcharts({
+						title:{
+							text:'电化学检测数据显示'
+						},
+						chart: {
+							zoomType: 'x'
+						},
+						xAxis: {
+							minRange: 100
+						},
+						series: [{
+							data: diplaydata2,
+							showInLegend: false 
+						}],
+						plotOptions: {
+								series: {
+									lineWidth: 1,
+									connectNulls: true ,
+									animation: {
+										duration: 0,
+										easing: 'easeOutBounce'
+									}
+								}
+							},
+						credits:{
+							enabled: false
+						}
+					});
+				});
+				
+				$(function () {
+					$('#container1').highcharts({
+						title:{
+							text:'电化学检测数据显示'
+						},
+						chart: {
+							zoomType: 'x'
+						},
+						xAxis: {
+							minRange: 100
+						},
+						series: [{
+							data: diplaydata1,
+							showInLegend: false 
+						}],
+						plotOptions: {
+								series: {
+									lineWidth: 1,
+									connectNulls: true ,
+									animation: {
+										duration: 0,
+										easing: 'easeOutBounce'
+									}
+								}
+							},
+						credits:{
+							enabled: false
+						}
+					});
+				});
+				
+			}
+			
+    </script>
+    </head>
+
+    <body>
+	<div id="container" style="width: 440px;height:400px;border: 0.0625rem solid #ccc;float: left;box-sizing: border-box;"></div>
+	<div id="container1" style="width: 440px;height:400px;border: 0.0625rem solid #ccc;float: left;box-sizing: border-box;"></div>
+	<div id="container2" style="width: 440px;height:400px;border: 0.0625rem solid #ccc;float: left;box-sizing: border-box;"></div>
+    <input type="text" id="msg" />
+	<script>
+
+			
+		
+		//var chart = Highcharts.chart('container', options);
+	</script>
+    <input type="button" value="查看波形" onclick="onConnect()" />
+    <input type="button" value="暂停" onclick="start()" />
+    <input type="button" value="断开连接" onclick="stop()" />
+    </body>
+
+    </html>

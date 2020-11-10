@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>驱鸟物联</title>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+	<script type="text/javascript" src="../static/highcharts.js"></script>
+    <script type="text/javascript" src="../static/drilldown.js"></script>
+
+    {% load filters %}
+    <script>
+        $(function () {
+            var timedata ={{ data|get_value:'time'}};
+            var chushu=1;
+            var  year2018=2018;
+            var  year2019=2019;
+            var  year2020=2020;
+            var chart;
+            let diplay_date=2020110216;
+            var drilldownSries=[];
+            function getyuedata(year) {
+                var yuedata=[];
+                for(var i=1;i<=12;i++){
+                    yuedata.push(
+                        {
+                            name:i.toString()+'月',
+                            y:search(year*100+i),
+                            drilldown:(year*100+i).toString()
+                        }
+                    )
+                }
+                return yuedata;
+            }
+            function getridata(year){
+                var ridata=[];
+                var shidata=[];
+                for(var yue=1;yue<=12;yue++){
+                    var day=0;
+                    if([1,3,5,7,8,10,12].includes(yue))
+                    {day=31;}
+                    else if ([4,6,9,11].includes(yue))
+                    {day=30;}
+                    else {//2月
+                        if (year%4===0)
+                        {
+                            day=29;
+                        }
+                        else {
+                            day=28;
+                        }
+                    }
+                    for(var i=1;i<=day;i++){
+                    ridata.push({
+                        name:i.toString()+'日',
+                        y:search(year*10000+yue*100+i),
+                        drilldown:(year*10000+yue*100+i).toString()
+                    });
+                        for (var shi=0;shi<=24;shi++){
+                            shidata.push({
+                                name:shi.toString()+'时',
+                                y:search(year*1000000+yue*10000+i*100+shi)
+                            });
+                        }
+                        drilldownSries.push({
+                            name:'日统计',
+                            id:(year*10000+yue*100+i).toString(),
+                            colorByPoint:true,
+                            data:shidata
+                        });
+                        shidata=[];
+                    }
+                    drilldownSries.push(
+                        {
+                            name: year.toString()+'年'+yue.toString()+'月统计',
+                            id: (year*100+yue).toString(),
+                            colorByPoint: true,
+                            data:ridata,
+                        }
+                    );
+                    ridata=[];
+                }
+            }
+            function getshidata(){
+                for (var i=0;i<24;i++)
+                {
+                    shi_data.push(
+                        {
+                            name:i.toString()+'时',
+                            y:search(parseInt(diplay_date/100)*100+i),//xx年xx月xx日xx时
+                        }
+                    )
+                }
+            }
+            function search(timese){
+                var num=0;
+                if (timese<10000){//年
+                    chushu = 1000000
+                }
+                else {
+                    if (timese<1000000){//月
+                        chushu =10000
+                    }
+                    else {
+                        if (timese<100000000){//日
+                            chushu=100
+                        }
+                        else {//时
+                            chushu=1
+                        }
+                    }
+                }
+                for (var i=0;i<timedata.length;i++){
+                    if (parseInt(timedata[i]/chushu)===timese)
+                        num++;
+                }
+                return num;
+            }
+            niandata=[{
+                    name: '年统计',
+                    type: 'line',
+                    colorByPoint: true,
+                    data: [{
+                        name: '2018年',
+                        y: search(2018),
+                        drilldown: year2018.toString()
+                    }, {
+                        name: '2019年',
+                        y: search(2019),
+                        drilldown: year2019.toString()
+                    }, {
+                        name: '2020年',
+                        y: search(2020),
+                        drilldown: year2020.toString()//xx年
+                    }]}];
+            drilldownSries=[{
+                name: '2018年月统计',
+                type: 'line',
+                id: '2018',//xx年
+                data:getyuedata(2018)
+                },{
+                name: '2019年月统计',
+                type: 'line',
+                id: '2019',//xx年
+                data:getyuedata(2019)
+            },{
+                name: '2020年月统计',
+                type: 'line',
+                id: '2020',//xx年
+                data:getyuedata(2020)
+            }];
+            getridata(2018);
+            getridata(2019);
+            getridata(2020);
+            var title = {
+                text: '驱鸟数据统计'
+            };
+            var plotOptions={
+                series: {
+                            cursor: 'pointer',
+                            borderWidth: 0,
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+            };
+            var legend ={enabled: false};
+            var xAxis = {
+                type: 'category'
+            };
+            var yAxis ={
+                min: 0
+            };
+            var Series=niandata;
+            var drilldown ={
+                series:drilldownSries
+            };
+            var json={};
+            json.plotOptions=plotOptions;
+            json.legend=legend;
+            json.title = title;
+            json.xAxis = xAxis;
+            json.series = Series;
+            json.drilldown = drilldown;
+            json.yAxis=yAxis;
+            $('#container').highcharts(json);
+            console.log(drilldownSries);
+        });
+
+
+
+
+
+           
+</script>
+</head>
+<body>
+<div id="container" style="width: 1000px;height:500px"></div>
+</body>
+</html>
